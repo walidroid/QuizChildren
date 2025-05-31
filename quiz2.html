@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>ألغاز للأطفال</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400;1,700&family=Badeen+Display&family=Cairo:wght@200..1000&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --background-dark: #2d3548;
+            --text-light: rgba(255, 255, 255, 0.6);
+            --text-lighter: rgba(255, 255, 255, 0.9);
+            --spacing-s: 8px;
+            --spacing-m: 16px;
+            --spacing-l: 24px;
+            --spacing-xl: 32px;
+            --spacing-xxl: 64px;
+            --width-container: 1200px;
+        }
+
+        * {
+            border: 0;
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            height: 100%;
+            font-family: "Amiri", serif;
+            font-weight: 400;
+            font-style: normal;
+        }
+
+        body {
+            height: 100%;
+        }
+
+        .hero-section {
+            align-items: center;
+            background-image: linear-gradient(15deg, #0f4667 0%, #2a6973 150%);
+            display: flex;
+            min-height: 100%;
+            justify-content: center;
+            padding: var(--spacing-xxl) var(--spacing-l);
+        }
+
+        .carousel-container {
+            position: relative;
+            max-width: 900px;
+            width: 100%;
+        }
+
+        .carousel-slide {
+            display: none;
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: var(--spacing-l);
+            padding: var(--spacing-xl);
+            text-align: center;
+        }
+
+        .carousel-slide.active {
+            display: block;
+        }
+
+        .carousel-slide h3 {
+            color: var(--text-lighter);
+            font-size: 5rem;
+            margin-bottom: var(--spacing-l);
+            direction: rtl;
+        }
+
+        .user-answer {
+            width: 100%;
+            padding: var(--spacing-m);
+            font-size: 1.5rem;
+            margin-bottom: var(--spacing-l);
+            border: none;
+            border-radius: var(--spacing-s);
+        }
+
+        .countdown-display {
+            font-size: 3rem;
+            color: #ff6b6b;
+            margin-bottom: var(--spacing-l);
+            font-weight: bold;
+        }
+
+        .toggle-answer {
+            background-color: #4CAF50;
+            color: white;
+            font-size: 3rem;
+            padding: var(--spacing-s) var(--spacing-m);
+            border: none;
+            border-radius: var(--spacing-s);
+            cursor: pointer;
+        }
+
+        .answer {
+            font-size: 6rem;
+            color: chartreuse;
+        }
+
+        .toggle-answer:hover {
+            background-color: #45a049;
+        }
+
+        .toggle-answer:disabled {
+            background-color: #666;
+            cursor: not-allowed;
+        }
+
+        .navigation-buttons {
+            display: flex;
+            justify-content: space-between;
+            margin-top: var(--spacing-l);
+        }
+
+        .navigation-buttons button {
+            background-color: #333;
+            color: white;
+            font-size: 1.5rem;
+            border: none;
+            padding: var(--spacing-s) var(--spacing-m);
+            border-radius: var(--spacing-s);
+            cursor: pointer;
+        }
+
+        .navigation-buttons button:hover {
+            background-color: #555;
+        }
+    </style>
+</head>
+<body>
+    <section class="hero-section">
+        <div class="carousel-container">
+            <div class="carousel" id="riddles-carousel"></div>
+            <div class="navigation-buttons">
+                <button id="prev-btn">رجوع</button>
+                <button id="next-btn">التالي</button>
+            </div>
+        </div>
+    </section>
+
+    <script>
+        // Sample data since we don't have the JSON file
+        const sampleData = [
+            {
+                number: "١",
+                question: "ما هو الشيء الذي له عينان ولا يرى؟",
+                answer: "الإبرة"
+            },
+            {
+                number: "٢", 
+                question: "ما هو الشيء الذي يكتب ولا يقرأ؟",
+                answer: "القلم"
+            },
+            {
+                number: "٣",
+                question: "ما هو الشيء الذي له أسنان ولا يعض؟",
+                answer: "المشط"
+            }
+        ];
+
+        // Use sample data or fetch from JSON if available
+        const loadData = () => {
+            return new Promise((resolve) => {
+                fetch('questions_and_answers.json')
+                    .then(response => response.json())
+                    .then(data => resolve(data))
+                    .catch(() => resolve(sampleData));
+            });
+        };
+
+        loadData().then(data => {
+            const carousel = document.getElementById('riddles-carousel');
+            let currentSlide = 0;
+            let countdownIntervals = [];
+
+            data.forEach((item, index) => {
+                const slide = document.createElement('div');
+                slide.className = `carousel-slide ${index === 0 ? 'active' : ''}`;
+                slide.innerHTML = `
+                    <h3>${item.number}</h3>
+                    <h3>${item.question}</h3>
+                    <div class="countdown-display" style="display: none;">10</div>
+                    <textarea class="user-answer" placeholder="اكتب إجابتك هنا..."></textarea>
+                    <button class="toggle-answer">بدء العد التنازلي</button>
+                    <p class="answer" style="display: none;">${item.answer}</p>
+                `;
+                carousel.appendChild(slide);
+
+                const button = slide.querySelector('.toggle-answer');
+                const answer = slide.querySelector('.answer');
+                const countdownDisplay = slide.querySelector('.countdown-display');
+                const userAnswer = slide.querySelector('.user-answer');
+                
+                button.addEventListener('click', () => {
+                    if (button.textContent === 'بدء العد التنازلي') {
+                        startCountdown(countdownDisplay, button, answer, userAnswer, index);
+                    } else if (button.textContent === 'إظهار الإجابة') {
+                        showAnswer(answer, button);
+                    } else if (button.textContent === 'إخفاء الإجابة') {
+                        hideAnswer(answer, button);
+                    }
+                });
+            });
+
+            function startCountdown(countdownDisplay, button, answer, userAnswer, slideIndex) {
+                let timeLeft = 10;
+                countdownDisplay.style.display = 'block';
+                countdownDisplay.textContent = timeLeft;
+                button.disabled = true;
+                button.textContent = 'جاري العد...';
+                userAnswer.disabled = true;
+
+                countdownIntervals[slideIndex] = setInterval(() => {
+                    timeLeft--;
+                    countdownDisplay.textContent = timeLeft;
+                    
+                    if (timeLeft <= 0) {
+                        clearInterval(countdownIntervals[slideIndex]);
+                        countdownDisplay.style.display = 'none';
+                        showAnswer(answer, button);
+                        userAnswer.disabled = false;
+                        button.disabled = false;
+                    }
+                }, 1000);
+            }
+
+            function showAnswer(answer, button) {
+                answer.style.display = 'block';
+                button.textContent = 'إخفاء الإجابة';
+            }
+
+            function hideAnswer(answer, button) {
+                answer.style.display = 'none';
+                button.textContent = 'إظهار الإجابة';
+            }
+
+            function resetSlide(slideIndex) {
+                const slide = document.querySelectorAll('.carousel-slide')[slideIndex];
+                const button = slide.querySelector('.toggle-answer');
+                const answer = slide.querySelector('.answer');
+                const countdownDisplay = slide.querySelector('.countdown-display');
+                const userAnswer = slide.querySelector('.user-answer');
+
+                // Clear any running countdown
+                if (countdownIntervals[slideIndex]) {
+                    clearInterval(countdownIntervals[slideIndex]);
+                }
+
+                // Reset UI elements
+                countdownDisplay.style.display = 'none';
+                answer.style.display = 'none';
+                button.textContent = 'بدء العد التنازلي';
+                button.disabled = false;
+                userAnswer.disabled = false;
+                userAnswer.value = '';
+            }
+
+            const prevBtn = document.getElementById('prev-btn');
+            const nextBtn = document.getElementById('next-btn');
+            const slides = document.querySelectorAll('.carousel-slide');
+
+            prevBtn.addEventListener('click', () => {
+                resetSlide(currentSlide);
+                slides[currentSlide].classList.remove('active');
+                currentSlide = (currentSlide - 1 + slides.length) % slides.length;
+                slides[currentSlide].classList.add('active');
+            });
+
+            nextBtn.addEventListener('click', () => {
+                resetSlide(currentSlide);
+                slides[currentSlide].classList.remove('active');
+                currentSlide = (currentSlide + 1) % slides.length;
+                slides[currentSlide].classList.add('active');
+            });
+        });
+    </script>
+</body>
+</html>
