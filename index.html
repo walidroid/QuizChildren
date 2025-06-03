@@ -132,15 +132,70 @@
             background-color: #555;
         }
     </style>
+    <style>
+        /* Arrow positioning outside carousel */
+        .carousel-container {
+            position: relative;
+            max-width: 900px;
+            width: 100%;
+            margin: 0 80px; /* Add margin for arrows */
+        }
+        
+        .carousel-nav {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 60px;
+            height: 60px;
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid white;
+            border-radius: 50%;
+            font-size: 2rem;
+            color: white;
+            cursor: pointer;
+            z-index: 10;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        
+        .carousel-nav.prev {
+            left: -80px;
+        }
+        
+        .carousel-nav.next {
+            right: -80px;
+        }
+        
+        @media (max-width: 768px) {
+            .carousel-container {
+                margin: 0 60px;
+            }
+            
+            .carousel-nav {
+                width: 50px;
+                height: 50px;
+                font-size: 1.5rem;
+            }
+            
+            .carousel-nav.prev {
+                left: -60px;
+            }
+            
+            .carousel-nav.next {
+                right: -60px;
+            }
+        }
+    </style>
 </head>
 <body>
     <section class="hero-section">
         <div class="carousel-container">
+            <button class="carousel-nav prev">←</button>
             <div class="carousel" id="riddles-carousel"></div>
-            <div class="navigation-buttons">
-                <button id="prev-btn">رجوع</button>
-                <button id="next-btn">التالي</button>
-            </div>
+            <button class="carousel-nav next">→</button>
         </div>
     </section>
 
@@ -183,10 +238,9 @@
                 const slide = document.createElement('div');
                 slide.className = `carousel-slide ${index === 0 ? 'active' : ''}`;
                 slide.innerHTML = `
-                    <h3>${item.number}</h3>
+                    <h3>${index + 1}</h3>
                     <h3>${item.question}</h3>
                     <div class="countdown-display" style="display: none;">10</div>
-                    <textarea class="user-answer" placeholder="اكتب إجابتك هنا..."></textarea>
                     <button class="toggle-answer">بدء العد التنازلي</button>
                     <p class="answer" style="display: none;">${item.answer}</p>
                 `;
@@ -198,6 +252,7 @@
                 const userAnswer = slide.querySelector('.user-answer');
                 
                 button.addEventListener('click', () => {
+                    const userAnswer = slide.querySelector('.user-answer');
                     if (button.textContent === 'بدء العد التنازلي') {
                         startCountdown(countdownDisplay, button, answer, userAnswer, index);
                     } else if (button.textContent === 'إظهار الإجابة') {
@@ -214,7 +269,7 @@
                 countdownDisplay.textContent = timeLeft;
                 button.disabled = true;
                 button.textContent = 'جاري العد...';
-                userAnswer.disabled = true;
+                if (userAnswer) userAnswer.disabled = true;
 
                 countdownIntervals[slideIndex] = setInterval(() => {
                     timeLeft--;
@@ -224,7 +279,7 @@
                         clearInterval(countdownIntervals[slideIndex]);
                         countdownDisplay.style.display = 'none';
                         showAnswer(answer, button);
-                        userAnswer.disabled = false;
+                        if (userAnswer) userAnswer.disabled = false;
                         button.disabled = false;
                     }
                 }, 1000);
@@ -250,19 +305,24 @@
                 // Clear any running countdown
                 if (countdownIntervals[slideIndex]) {
                     clearInterval(countdownIntervals[slideIndex]);
+                    countdownIntervals[slideIndex] = null;
                 }
 
                 // Reset UI elements
-                countdownDisplay.style.display = 'none';
-                answer.style.display = 'none';
-                button.textContent = 'بدء العد التنازلي';
-                button.disabled = false;
-                userAnswer.disabled = false;
-                userAnswer.value = '';
+                if (countdownDisplay) countdownDisplay.style.display = 'none';
+                if (answer) answer.style.display = 'none';
+                if (button) {
+                    button.textContent = 'بدء العد التنازلي';
+                    button.disabled = false;
+                }
+                if (userAnswer) {
+                    userAnswer.disabled = false;
+                    userAnswer.value = '';
+                }
             }
 
-            const prevBtn = document.getElementById('prev-btn');
-            const nextBtn = document.getElementById('next-btn');
+            const prevBtn = document.querySelector('.carousel-nav.prev');
+            const nextBtn = document.querySelector('.carousel-nav.next');
             const slides = document.querySelectorAll('.carousel-slide');
 
             prevBtn.addEventListener('click', () => {
