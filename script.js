@@ -87,16 +87,66 @@ questionsSection.appendChild(questionNavigation); // Append navigation to questi
 let allQuestions = {};
 let currentQuestions = [];
 let currentQuestionIndex = 0;
-let answerTimeoutId = null; 
+let answerTimeoutId = null;
 let countdownIntervalId = null; // For the new animation interval
+
+// Cookie helper functions
+function setCookie(name, value, days) {
+    let expires = "";
+    if (days) {
+        const date = new Date();
+        date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
+        expires = "; expires=" + date.toUTCString();
+    }
+    document.cookie = name + "=" + (value || "")  + expires + "; path=/";
+}
+
+function getCookie(name) {
+    const nameEQ = name + "=";
+    const ca = document.cookie.split(';');
+    for(let i = 0; i < ca.length; i++) {
+        let c = ca[i];
+        while (c.charAt(0) == ' ') c = c.substring(1, c.length);
+        if (c.indexOf(nameEQ) == 0) return c.substring(nameEQ.length, c.length);
+    }
+    return null;
+}
+
+function clearLastQuestionCookie() {
+    setCookie('lastQuestion', '', -1); // Set expiry to past to delete
+}
 
 // Fetch questions from questions.json
 fetch('questions.json')
   .then(response => response.json())
   .then(data => {
     allQuestions = data;
+    // Attempt to load last question from cookie after questions are loaded
+    loadLastQuestionFromCookie();
   })
   .catch(error => console.error('Error loading questions:', error));
+
+// Function to load and display the last question from cookie
+function loadLastQuestionFromCookie() {
+    const lastQuestionCookie = getCookie('lastQuestion');
+    if (lastQuestionCookie) {
+        try {
+            const { category, index } = JSON.parse(lastQuestionCookie);
+            if (category && allQuestions[category] && index !== undefined) {
+                currentQuestions = allQuestions[category];
+                currentQuestionIndex = parseInt(index, 10);
+                if (currentQuestionIndex >= 0 && currentQuestionIndex < currentQuestions.length) {
+                    displaySingleQuestion(category);
+                } else {
+                    clearLastQuestionCookie(); // Invalid index, clear cookie
+                }
+            }
+        } catch (e) {
+            console.error('Error parsing lastQuestion cookie:', e);
+            clearLastQuestionCookie(); // Clear corrupted cookie
+        }
+    }
+}
 
 // Add click event listeners to each swiper slide
 document.querySelectorAll('.swiper-slide').forEach(slide => {
@@ -116,6 +166,9 @@ function displaySingleQuestion(category) {
   questionsSection.style.display = 'block';
   questionCategoryTitle.textContent = category;
   questionsContainer.innerHTML = '';
+
+  // Save current question to cookie
+  setCookie('lastQuestion', JSON.stringify({ category: category, index: currentQuestionIndex }), 7); // Save for 7 days
 
   if (answerTimeoutId) clearTimeout(answerTimeoutId);
   if (countdownIntervalId) clearInterval(countdownIntervalId);
@@ -220,10 +273,18 @@ prevQuestionBtn.addEventListener('click', () => {
   }
 });
 
-// Event listener for the back button
+// Event listener for the back to carousel button
 backToCarouselBtn.addEventListener('click', () => {
-  if (answerTimeoutId) clearTimeout(answerTimeoutId);
-  if (countdownIntervalId) clearInterval(countdownIntervalId);
   questionsSection.style.display = 'none';
   carouselSection.style.display = 'block';
+  if (answerTimeoutId) clearTimeout(answerTimeoutId);
+  if (countdownIntervalId) clearInterval(countdownIntervalId); // Clear countdown interval
+  // Clear the last question cookie when going back to categories
+  clearLastQuestionCookie();
 });
+
+// Initial check in case questions are already loaded (e.g., from cache) and DOM is ready
+// This is a fallback, primary load is in fetch().then()
+if (Object.keys(allQuestions).length > 0) {
+    loadLastQuestionFromCookie();
+}
