@@ -223,6 +223,69 @@ body {
   background-color: #f8f9fa; /* Light background for countdown */
   border-radius: 8px;
   text-align: center;
+  display: none; /* Hide the old text-based countdown */
+}
+
+/* New Animated Countdown Styles */
+.animated-countdown {
+  width: 120px; /* Size of the circle */
+  height: 120px;
+  border-radius: 50%;
+  background-color: #007bff; /* Base color, can be changed */
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 3em; /* Size of the number */
+  font-weight: bold;
+  margin: 20px auto; /* Center it */
+  position: relative;
+  overflow: hidden; /* Important for the fill effect */
+  font-family: 'Montserrat', sans-serif; /* From the SCSS example */
+  box-shadow: 0 0 0 5px white, /* Outer white ring */
+              inset 5px 5px 10px rgba(0, 0, 0, 0.2), /* Inner shadow */
+              5px 5px 10px rgba(0, 0, 0, 0.2); /* Outer shadow */
+}
+
+.animated-countdown span {
+  position: relative; /* To ensure it's above the ::before pseudo-element */
+  z-index: 2;
+}
+
+.animated-countdown::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.25); /* Darker overlay for progress */
+  transform: translateY(100%); /* Start filled (or empty if you reverse) */
+  animation: fillTimer var(--timer-duration, 5s) linear forwards;
+  z-index: 1;
+}
+
+@keyframes fillTimer {
+  0% {
+    transform: translateY(100%); /* Starts at the bottom, appearing empty */
+  }
+  100% {
+    transform: translateY(0%); /* Fills to the top */
+  }
+}
+
+/* Optional: Add a subtle pulse to the number */
+@keyframes pulseNumber {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+}
+
+.animated-countdown span {
+  animation: pulseNumber 1s infinite ease-in-out;
 }
 
 /* Styling for navigation buttons and back button */

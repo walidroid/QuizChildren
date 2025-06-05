@@ -87,7 +87,8 @@ questionsSection.appendChild(questionNavigation); // Append navigation to questi
 let allQuestions = {};
 let currentQuestions = [];
 let currentQuestionIndex = 0;
-let answerTimeoutId = null; // Variable to store the timeout ID
+let answerTimeoutId = null; 
+let countdownIntervalId = null; // For the new animation interval
 
 // Fetch questions from questions.json
 fetch('questions.json')
@@ -114,13 +115,10 @@ function displaySingleQuestion(category) {
   carouselSection.style.display = 'none';
   questionsSection.style.display = 'block';
   questionCategoryTitle.textContent = category;
-  questionsContainer.innerHTML = ''; // Clear previous questions
+  questionsContainer.innerHTML = '';
 
-  // Clear any existing answer timeout when a new question is displayed
-  if (answerTimeoutId) {
-    clearTimeout(answerTimeoutId);
-    answerTimeoutId = null;
-  }
+  if (answerTimeoutId) clearTimeout(answerTimeoutId);
+  if (countdownIntervalId) clearInterval(countdownIntervalId);
 
   if (currentQuestions.length > 0) {
     const q = currentQuestions[currentQuestionIndex];
@@ -129,7 +127,7 @@ function displaySingleQuestion(category) {
 
     const questionText = document.createElement('p');
     const strongQuestionText = document.createElement('strong');
-    strongQuestionText.textContent = `${currentQuestionIndex + 1}: ${q.question}`;
+    strongQuestionText.textContent = `Q${currentQuestionIndex + 1}: ${q.question}`;
     questionText.appendChild(strongQuestionText);
     questionDiv.appendChild(questionText);
 
@@ -143,7 +141,6 @@ function displaySingleQuestion(category) {
       questionDiv.appendChild(optionsList);
     }
 
-    // Create a container for the answer and countdown
     const answerContainer = document.createElement('div');
     answerContainer.classList.add('answer-container');
     questionDiv.appendChild(answerContainer);
@@ -151,45 +148,47 @@ function displaySingleQuestion(category) {
     if (q.answer) {
       const answerParagraph = document.createElement('p');
       answerParagraph.classList.add('answer');
-      answerParagraph.textContent = `الجواب: ${q.answer}`;
-      answerParagraph.style.display = 'none'; // Initially hide the answer
+      answerParagraph.textContent = ` ${q.answer}`;
+      answerParagraph.style.display = 'none';
 
-      const countdownParagraph = document.createElement('p');
-      countdownParagraph.classList.add('countdown');
-      countdownParagraph.textContent = ' 5';
-
-      answerContainer.appendChild(countdownParagraph);
+      // New Animated Countdown Element
+      const animatedCountdownDiv = document.createElement('div');
+      animatedCountdownDiv.classList.add('animated-countdown');
+      const countdownNumberSpan = document.createElement('span');
+      animatedCountdownDiv.appendChild(countdownNumberSpan);
+      answerContainer.appendChild(animatedCountdownDiv);
       answerContainer.appendChild(answerParagraph);
 
-      // Start countdown
-      let countdown = 5;
-      const countdownInterval = setInterval(() => {
+      let countdown = 8;
+      countdownNumberSpan.textContent = countdown;
+      animatedCountdownDiv.style.setProperty('--timer-duration', `${countdown}s`);
+
+      countdownIntervalId = setInterval(() => {
         countdown--;
         if (countdown > 0) {
-          countdownParagraph.textContent = ` ${countdown} `;
+          countdownNumberSpan.textContent = countdown;
         } else {
-          clearInterval(countdownInterval);
-          countdownParagraph.style.display = 'none';
+          clearInterval(countdownIntervalId);
+          animatedCountdownDiv.style.display = 'none';
           answerParagraph.style.display = 'block';
         }
       }, 1000);
 
-      // Store the interval ID in case we need to clear it early (e.g., when navigating to next/prev question)
-      // We'll use a timeout to clear this interval if the user navigates away before 5s
-      // This is a simplified approach; for robustness, manage intervals more directly.
-      answerTimeoutId = setTimeout(() => { // This timeout is just to ensure cleanup if interval isn't cleared by navigation
-        clearInterval(countdownInterval);
-      }, 5500); // A bit longer than the countdown itself
+      // Fallback timeout to ensure answer shows if interval somehow fails
+      answerTimeoutId = setTimeout(() => {
+        clearInterval(countdownIntervalId); // Clear interval if still running
+        animatedCountdownDiv.style.display = 'none';
+        answerParagraph.style.display = 'block';
+      }, (countdown + 0.5) * 1000); // 5.5 seconds total
 
     } else {
-        const noAnswerText = document.createElement('p');
-        noAnswerText.textContent = 'No answer provided for this question.';
-        answerContainer.appendChild(noAnswerText);
+      const noAnswerText = document.createElement('p');
+      noAnswerText.textContent = 'No answer provided for this question.';
+      answerContainer.appendChild(noAnswerText);
     }
 
     questionsContainer.appendChild(questionDiv);
 
-    // Update navigation button visibility and disabled state
     prevQuestionBtn.style.display = 'block';
     nextQuestionBtn.style.display = 'block';
     prevQuestionBtn.disabled = currentQuestionIndex === 0;
@@ -204,7 +203,8 @@ function displaySingleQuestion(category) {
 
 // Event listeners for navigation buttons
 nextQuestionBtn.addEventListener('click', () => {
-  if (answerTimeoutId) clearTimeout(answerTimeoutId); // Clear previous timeout
+  if (answerTimeoutId) clearTimeout(answerTimeoutId);
+  if (countdownIntervalId) clearInterval(countdownIntervalId);
   if (currentQuestionIndex < currentQuestions.length - 1) {
     currentQuestionIndex++;
     displaySingleQuestion(questionCategoryTitle.textContent);
@@ -212,7 +212,8 @@ nextQuestionBtn.addEventListener('click', () => {
 });
 
 prevQuestionBtn.addEventListener('click', () => {
-  if (answerTimeoutId) clearTimeout(answerTimeoutId); // Clear previous timeout
+  if (answerTimeoutId) clearTimeout(answerTimeoutId);
+  if (countdownIntervalId) clearInterval(countdownIntervalId);
   if (currentQuestionIndex > 0) {
     currentQuestionIndex--;
     displaySingleQuestion(questionCategoryTitle.textContent);
@@ -221,7 +222,8 @@ prevQuestionBtn.addEventListener('click', () => {
 
 // Event listener for the back button
 backToCarouselBtn.addEventListener('click', () => {
-  if (answerTimeoutId) clearTimeout(answerTimeoutId); // Clear previous timeout
+  if (answerTimeoutId) clearTimeout(answerTimeoutId);
+  if (countdownIntervalId) clearInterval(countdownIntervalId);
   questionsSection.style.display = 'none';
   carouselSection.style.display = 'block';
 });
