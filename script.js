@@ -180,7 +180,7 @@ function displaySingleQuestion(category) {
 
     const questionText = document.createElement('p');
     const strongQuestionText = document.createElement('strong');
-    strongQuestionText.textContent = `Q${currentQuestionIndex + 1}: ${q.question}`;
+    strongQuestionText.textContent = `${currentQuestionIndex + 1}: ${q.question}`;
     questionText.appendChild(strongQuestionText);
     questionDiv.appendChild(questionText);
 
