@@ -84,6 +84,13 @@
 <!-- New section for displaying questions -->
 <section id="questions-section" style="display: none; padding: 20px;">
   <h2 id="question-category-title" style="text-align: center; margin-bottom: 20px;"></h2>
+ 
+  <!-- Add this div for the question navigation dropdown -->
+  <div id="question-jump-navigation" style="text-align: center; margin-bottom: 20px; display: none;">
+    <label for="question-select">انتقل إلى السؤال: </label>
+    <select id="question-select" style="padding: 5px; border-radius: 5px;"></select>
+  </div>
+
   <div id="questions-container"></div>
   <button id="back-to-carousel" style="display: block; margin: 20px auto; padding: 10px 20px; background-color: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer;">العودة الى الصفحة الرئيسية</button>
 </section>

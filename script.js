@@ -52,6 +52,8 @@ const questionsSection = document.getElementById('questions-section');
 const questionCategoryTitle = document.getElementById('question-category-title');
 const questionsContainer = document.getElementById('questions-container');
 const backToCarouselBtn = document.getElementById('back-to-carousel');
+const questionJumpNavigation = document.getElementById('question-jump-navigation'); // Get the new div
+const questionSelect = document.getElementById('question-select'); // Get the new select element
 
 // New elements for question navigation
 const questionNavigation = document.createElement('div');
@@ -173,6 +175,23 @@ function displaySingleQuestion(category) {
   if (answerTimeoutId) clearTimeout(answerTimeoutId);
   if (countdownIntervalId) clearInterval(countdownIntervalId);
 
+  // Populate the question selection dropdown
+  questionSelect.innerHTML = ''; // Clear previous options
+  if (currentQuestions.length > 0) {
+    currentQuestions.forEach((q, index) => {
+      const option = document.createElement('option');
+      option.value = index;
+      option.textContent = `السؤال ${index + 1}`;
+      if (index === currentQuestionIndex) {
+        option.selected = true;
+      }
+      questionSelect.appendChild(option);
+    });
+    questionJumpNavigation.style.display = 'block'; // Show the dropdown
+  } else {
+    questionJumpNavigation.style.display = 'none'; // Hide if no questions
+  }
+
   if (currentQuestions.length > 0) {
     const q = currentQuestions[currentQuestionIndex];
     const questionDiv = document.createElement('div');
@@ -246,11 +265,13 @@ function displaySingleQuestion(category) {
     nextQuestionBtn.style.display = 'block';
     prevQuestionBtn.disabled = currentQuestionIndex === 0;
     nextQuestionBtn.disabled = currentQuestionIndex === currentQuestions.length - 1;
+    questionSelect.value = currentQuestionIndex; // Ensure dropdown is synced
 
   } else {
     questionsContainer.textContent = 'No questions available for this category.';
     prevQuestionBtn.style.display = 'none';
     nextQuestionBtn.style.display = 'none';
+    questionJumpNavigation.style.display = 'none'; // Hide dropdown if no questions
   }
 }
 
@@ -273,14 +294,26 @@ prevQuestionBtn.addEventListener('click', () => {
   }
 });
 
+// Event listener for the question select dropdown
+questionSelect.addEventListener('change', function() {
+  const selectedIndex = parseInt(this.value, 10);
+  if (!isNaN(selectedIndex) && selectedIndex >= 0 && selectedIndex < currentQuestions.length) {
+    currentQuestionIndex = selectedIndex;
+    // It's important to get the category from a reliable source if needed here.
+    // Assuming 'questionCategoryTitle.textContent' holds the current category name accurately.
+    displaySingleQuestion(questionCategoryTitle.textContent);
+  }
+});
+
 // Event listener for the back to carousel button
 backToCarouselBtn.addEventListener('click', () => {
   questionsSection.style.display = 'none';
   carouselSection.style.display = 'block';
+  questionJumpNavigation.style.display = 'none'; // Hide dropdown when going back
   if (answerTimeoutId) clearTimeout(answerTimeoutId);
   if (countdownIntervalId) clearInterval(countdownIntervalId); // Clear countdown interval
-  // Clear the last question cookie when going back to categories
-  clearLastQuestionCookie();
+  // The following line will be removed:
+  // clearLastQuestionCookie(); 
 });
 
 // Initial check in case questions are already loaded (e.g., from cache) and DOM is ready

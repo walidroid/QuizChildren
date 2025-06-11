@@ -374,3 +374,155 @@ body {
     margin-bottom: 0;
   }
 }
+
+/* Styles for the Question Jump Navigation Dropdown */
+#question-jump-navigation {
+  text-align: center;
+  margin-bottom: 30px; /* Increased margin */
+  padding: 10px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(5px);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+  display: none; /* Initially hidden, shown by JS */
+  direction: rtl; /* Right-to-left for the label and select */
+}
+
+#question-jump-navigation label {
+  font-size: 1.1rem;
+  color: #fff;
+  margin-left: 10px; /* Space between label and select */
+  font-weight: 500;
+  font-family: "alshohadaa", sans-serif;
+}
+
+#question-select {
+  padding: 12px 20px;
+  font-size: 1rem;
+  border: none;
+  border-radius: 8px;
+  background-color: rgba(255, 255, 255, 0.9);
+  color: #333;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  cursor: pointer;
+  outline: none;
+  transition: all 0.3s ease;
+  appearance: none; /* Remove default system appearance */
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  min-width: 200px; /* Give it some base width */
+  background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23007bff%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.4-12.8z%22%2F%3E%3C%2Fsvg%3E');
+  background-repeat: no-repeat;
+  background-position: left 15px center; /* Position arrow on the left for RTL */
+  background-size: 12px;
+  padding-left: 40px; /* Make space for the custom arrow */
+}
+
+#question-select:hover {
+  background-color: rgba(255, 255, 255, 1);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+}
+
+#question-select:focus {
+  border-color: #007bff; /* Or your theme's primary color */
+  box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25); /* Focus ring */
+}
+
+#question-select option {
+  padding: 10px;
+  background-color: #fff;
+  color: #333;
+}
+
+/* Responsive adjustments for the dropdown if needed */
+@media (max-width: 768px) {
+  #question-jump-navigation {
+    padding: 8px;
+  }
+  #question-jump-navigation label {
+    font-size: 1rem;
+  }
+  #question-select {
+    padding: 10px 15px;
+    font-size: 0.9rem;
+    min-width: 150px;
+    padding-left: 35px; /* Adjust for smaller arrow */
+    background-position: left 10px center;
+  }
+}
+
+@media (max-width: 480px) {
+  #question-jump-navigation {
+    display: flex; /* Stack label and select on small screens */
+    flex-direction: column;
+    align-items: center;
+  }
+  #question-jump-navigation label {
+    margin-left: 0;
+    margin-bottom: 8px;
+  }
+  #question-select {
+    width: 90%; /* Make it wider on very small screens */
+  }
+}
+
+/* Styles for the Question Navigation Buttons (Prev/Next) */
+.question-navigation-container {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 30px; /* Increased margin */
+  padding: 10px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(5px);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+}
+
+.question-navigation-container button {
+  padding: 12px 25px;
+  font-size: 1rem;
+  font-weight: 600;
+  color: white;
+  background: linear-gradient(45deg, #007bff, #0056b3);
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+  font-family: "alshohadaa", sans-serif;
+}
+
+.question-navigation-container button:hover:not(:disabled) {
+  background: linear-gradient(45deg, #0056b3, #007bff);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+}
+
+.question-navigation-container button:disabled {
+  background: #6c757d; /* Grey out when disabled */
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+/* Adjust Back to Categories button to match */
+#back-to-carousel {
+    display: block;
+    margin: 30px auto; /* Increased margin */
+    padding: 12px 25px;
+    font-size: 1rem;
+    font-weight: 600;
+    color: white;
+    background: linear-gradient(45deg, #28a745, #1e7e34); /* Green gradient */
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    font-family: "alshohadaa", sans-serif;
+}
+
+#back-to-carousel:hover {
+    background: linear-gradient(45deg, #1e7e34, #28a745);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+}
