@@ -52,45 +52,32 @@ const questionsSection = document.getElementById('questions-section');
 const questionCategoryTitle = document.getElementById('question-category-title');
 const questionsContainer = document.getElementById('questions-container');
 const backToCarouselBtn = document.getElementById('back-to-carousel');
-const questionJumpNavigation = document.getElementById('question-jump-navigation'); // Get the new div
-const questionSelect = document.getElementById('question-select'); // Get the new select element
+const questionJumpNavigation = document.getElementById('question-jump-navigation');
+const questionSelect = document.getElementById('question-select');
 
 // New elements for question navigation
 const questionNavigation = document.createElement('div');
-questionNavigation.className = 'question-navigation-container'; // Add class for styling
-// questionNavigation.style.display = 'flex'; // Remove inline styles, handled by CSS
-// questionNavigation.style.justifyContent = 'space-between'; // Remove inline styles
-// questionNavigation.style.marginTop = '20px'; // Remove inline styles
+questionNavigation.className = 'question-navigation-container';
 
 const prevQuestionBtn = document.createElement('button');
 prevQuestionBtn.textContent = 'السؤال السابق';
-// prevQuestionBtn.style.padding = '10px 20px'; // Remove inline styles
-// prevQuestionBtn.style.backgroundColor = '#28a745'; // Remove inline styles
-// prevQuestionBtn.style.color = 'white'; // Remove inline styles
-// prevQuestionBtn.style.border = 'none'; // Remove inline styles
-// prevQuestionBtn.style.borderRadius = '5px'; // Remove inline styles
-// prevQuestionBtn.style.cursor = 'pointer'; // Remove inline styles
-prevQuestionBtn.style.display = 'none'; // Hidden initially
+prevQuestionBtn.style.display = 'none';
 
 const nextQuestionBtn = document.createElement('button');
 nextQuestionBtn.textContent = 'السؤال التالي';
-// nextQuestionBtn.style.padding = '10px 20px'; // Remove inline styles
-// nextQuestionBtn.style.backgroundColor = '#28a745'; // Remove inline styles
-// nextQuestionBtn.style.color = 'white'; // Remove inline styles
-// nextQuestionBtn.style.border = 'none'; // Remove inline styles
-// nextQuestionBtn.style.borderRadius = '5px'; // Remove inline styles
-// nextQuestionBtn.style.cursor = 'pointer'; // Remove inline styles
-nextQuestionBtn.style.display = 'none'; // Hidden initially
+nextQuestionBtn.style.display = 'none';
 
 questionNavigation.appendChild(prevQuestionBtn);
 questionNavigation.appendChild(nextQuestionBtn);
-questionsSection.appendChild(questionNavigation); // Append navigation to questions section
+questionsSection.appendChild(questionNavigation);
 
 let allQuestions = {};
 let currentQuestions = [];
 let currentQuestionIndex = 0;
 let answerTimeoutId = null;
-let countdownIntervalId = null; // For the new animation interval
+let countdownIntervalId = null;
+// NEW: Variable to hold the auto-next timer
+let autoNextTimeoutId = null;
 
 // Cookie helper functions
 function setCookie(name, value, days) {
@@ -115,7 +102,7 @@ function getCookie(name) {
 }
 
 function clearLastQuestionCookie() {
-    setCookie('lastQuestion', '', -1); // Set expiry to past to delete
+    setCookie('lastQuestion', '', -1);
 }
 
 // Fetch questions from questions.json
@@ -123,12 +110,10 @@ fetch('questions.json')
   .then(response => response.json())
   .then(data => {
     allQuestions = data;
-    // Attempt to load last question from cookie after questions are loaded
     loadLastQuestionFromCookie();
   })
   .catch(error => console.error('Error loading questions:', error));
 
-// Function to load and display the last question from cookie
 function loadLastQuestionFromCookie() {
     const lastQuestionCookie = getCookie('lastQuestion');
     if (lastQuestionCookie) {
@@ -140,17 +125,16 @@ function loadLastQuestionFromCookie() {
                 if (currentQuestionIndex >= 0 && currentQuestionIndex < currentQuestions.length) {
                     displaySingleQuestion(category);
                 } else {
-                    clearLastQuestionCookie(); // Invalid index, clear cookie
+                    clearLastQuestionCookie();
                 }
             }
         } catch (e) {
             console.error('Error parsing lastQuestion cookie:', e);
-            clearLastQuestionCookie(); // Clear corrupted cookie
+            clearLastQuestionCookie();
         }
     }
 }
 
-// Add click event listeners to each swiper slide
 document.querySelectorAll('.swiper-slide').forEach(slide => {
   slide.addEventListener('click', function() {
     const category = this.dataset.category;
@@ -162,21 +146,31 @@ document.querySelectorAll('.swiper-slide').forEach(slide => {
   });
 });
 
-// Function to display a single question
+// Helper function to trigger the 20-second wait and auto-advance
+function startAutoNextTimer(category) {
+    // Only set the timer if there is a next question
+    if (currentQuestionIndex < currentQuestions.length - 1) {
+        autoNextTimeoutId = setTimeout(() => {
+            currentQuestionIndex++;
+            displaySingleQuestion(category);
+        }, 20000); // 20000 milliseconds = 20 seconds
+    }
+}
+
 function displaySingleQuestion(category) {
   carouselSection.style.display = 'none';
   questionsSection.style.display = 'block';
   questionCategoryTitle.textContent = category;
   questionsContainer.innerHTML = '';
 
-  // Save current question to cookie
-  setCookie('lastQuestion', JSON.stringify({ category: category, index: currentQuestionIndex }), 7); // Save for 7 days
+  setCookie('lastQuestion', JSON.stringify({ category: category, index: currentQuestionIndex }), 7);
 
+  // Clear ALL timers (answer reveal, countdown, and auto-next)
   if (answerTimeoutId) clearTimeout(answerTimeoutId);
   if (countdownIntervalId) clearInterval(countdownIntervalId);
+  if (autoNextTimeoutId) clearTimeout(autoNextTimeoutId);
 
-  // Populate the question selection dropdown
-  questionSelect.innerHTML = ''; // Clear previous options
+  questionSelect.innerHTML = '';
   if (currentQuestions.length > 0) {
     currentQuestions.forEach((q, index) => {
       const option = document.createElement('option');
@@ -187,9 +181,9 @@ function displaySingleQuestion(category) {
       }
       questionSelect.appendChild(option);
     });
-    questionJumpNavigation.style.display = 'block'; // Show the dropdown
+    questionJumpNavigation.style.display = 'block';
   } else {
-    questionJumpNavigation.style.display = 'none'; // Hide if no questions
+    questionJumpNavigation.style.display = 'none';
   }
 
   if (currentQuestions.length > 0) {
@@ -223,7 +217,6 @@ function displaySingleQuestion(category) {
       answerParagraph.textContent = ` ${q.answer}`;
       answerParagraph.style.display = 'none';
 
-      // New Animated Countdown Element
       const animatedCountdownDiv = document.createElement('div');
       animatedCountdownDiv.classList.add('animated-countdown');
       const countdownNumberSpan = document.createElement('span');
@@ -243,15 +236,22 @@ function displaySingleQuestion(category) {
           clearInterval(countdownIntervalId);
           animatedCountdownDiv.style.display = 'none';
           answerParagraph.style.display = 'block';
+          // START 20 SECOND WAIT HERE
+          startAutoNextTimer(category);
         }
       }, 1000);
 
-      // Fallback timeout to ensure answer shows if interval somehow fails
+      // Fallback timeout
       answerTimeoutId = setTimeout(() => {
-        clearInterval(countdownIntervalId); // Clear interval if still running
+        clearInterval(countdownIntervalId);
         animatedCountdownDiv.style.display = 'none';
         answerParagraph.style.display = 'block';
-      }, (countdown + 0.5) * 1000); // 5.5 seconds total
+        
+        // Ensure timer starts if fallback is triggered and timer isn't already running
+        if (!autoNextTimeoutId) {
+             startAutoNextTimer(category);
+        }
+      }, (countdown + 0.5) * 1000);
 
     } else {
       const noAnswerText = document.createElement('p');
@@ -265,13 +265,13 @@ function displaySingleQuestion(category) {
     nextQuestionBtn.style.display = 'block';
     prevQuestionBtn.disabled = currentQuestionIndex === 0;
     nextQuestionBtn.disabled = currentQuestionIndex === currentQuestions.length - 1;
-    questionSelect.value = currentQuestionIndex; // Ensure dropdown is synced
+    questionSelect.value = currentQuestionIndex;
 
   } else {
     questionsContainer.textContent = 'No questions available for this category.';
     prevQuestionBtn.style.display = 'none';
     nextQuestionBtn.style.display = 'none';
-    questionJumpNavigation.style.display = 'none'; // Hide dropdown if no questions
+    questionJumpNavigation.style.display = 'none';
   }
 }
 
@@ -279,6 +279,7 @@ function displaySingleQuestion(category) {
 nextQuestionBtn.addEventListener('click', () => {
   if (answerTimeoutId) clearTimeout(answerTimeoutId);
   if (countdownIntervalId) clearInterval(countdownIntervalId);
+  if (autoNextTimeoutId) clearTimeout(autoNextTimeoutId); // Clear auto-next on manual click
   if (currentQuestionIndex < currentQuestions.length - 1) {
     currentQuestionIndex++;
     displaySingleQuestion(questionCategoryTitle.textContent);
@@ -288,36 +289,30 @@ nextQuestionBtn.addEventListener('click', () => {
 prevQuestionBtn.addEventListener('click', () => {
   if (answerTimeoutId) clearTimeout(answerTimeoutId);
   if (countdownIntervalId) clearInterval(countdownIntervalId);
+  if (autoNextTimeoutId) clearTimeout(autoNextTimeoutId); // Clear auto-next on manual click
   if (currentQuestionIndex > 0) {
     currentQuestionIndex--;
     displaySingleQuestion(questionCategoryTitle.textContent);
   }
 });
 
-// Event listener for the question select dropdown
 questionSelect.addEventListener('change', function() {
   const selectedIndex = parseInt(this.value, 10);
   if (!isNaN(selectedIndex) && selectedIndex >= 0 && selectedIndex < currentQuestions.length) {
     currentQuestionIndex = selectedIndex;
-    // It's important to get the category from a reliable source if needed here.
-    // Assuming 'questionCategoryTitle.textContent' holds the current category name accurately.
     displaySingleQuestion(questionCategoryTitle.textContent);
   }
 });
 
-// Event listener for the back to carousel button
 backToCarouselBtn.addEventListener('click', () => {
   questionsSection.style.display = 'none';
   carouselSection.style.display = 'block';
-  questionJumpNavigation.style.display = 'none'; // Hide dropdown when going back
+  questionJumpNavigation.style.display = 'none';
   if (answerTimeoutId) clearTimeout(answerTimeoutId);
-  if (countdownIntervalId) clearInterval(countdownIntervalId); // Clear countdown interval
-  // The following line will be removed:
-  // clearLastQuestionCookie(); 
+  if (countdownIntervalId) clearInterval(countdownIntervalId);
+  if (autoNextTimeoutId) clearTimeout(autoNextTimeoutId); // Clear auto-next on back
 });
 
-// Initial check in case questions are already loaded (e.g., from cache) and DOM is ready
-// This is a fallback, primary load is in fetch().then()
 if (Object.keys(allQuestions).length > 0) {
     loadLastQuestionFromCookie();
 }
